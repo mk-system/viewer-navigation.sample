@@ -40,3 +40,5 @@ jspm_packages
 # webstorm files
 .DS_Store
 .idea
+
+yarn.lock

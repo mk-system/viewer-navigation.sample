@@ -76,11 +76,6 @@ router.get('/forge/initialsetup', (req, res) => {
 function uploadToOSS (fileName, filePath, req, res, callback) {
 	new Token().getTokenInternal((tokenInternal, apiInstance) => {
 		let buckets = new ForgeSDK.BucketsApi();
-    //  let objects = new ForgeSDK.ObjectsApi()
-		let postBuckets = new ForgeSDK.PostBucketsPayload();
-		postBuckets.bucketKey = myBucketKey;
-		postBuckets.policyKey = 'transient';
-
     let mineType = getMineType(filePath);
     let fs = require('fs');
 

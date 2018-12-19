@@ -79,39 +79,37 @@ function uploadToOSS (fileName, filePath, req, res, callback) {
     //  let objects = new ForgeSDK.ObjectsApi()
 		let postBuckets = new ForgeSDK.PostBucketsPayload();
 		postBuckets.bucketKey = myBucketKey;
-		postBuckets.policyKey = 'persistent';
+		postBuckets.policyKey = 'transient';
 
-		buckets.createBucket(postBuckets, null, apiInstance, tokenInternal).then(() => {
-			let mineType = getMineType(filePath);
-			let fs = require('fs');
+    let mineType = getMineType(filePath);
+    let fs = require('fs');
 
-			fs.readFile(filePath, function (err, filecontent) {
-				if (err) { errHandler(err, res); res.status(500).end('Error occurred ...'); return; }
-				request({
-					url: 'https://developer.api.autodesk.com/oss/v2/buckets/' + myBucketKey + '/objects/' + fileName,
-					method: 'PUT',
-					headers: {
-						'Authorization': 'Bearer ' + tokenInternal.access_token,
-						'Content-Type': mineType
-					},
-					body: filecontent
-				}, function (error, response) {
-					if (error) { console.log(error); res.status(500).end('Error occurred ...'); return; }
-          // now translate to SVF (Forge Viewer format)
-					let bodyObj = JSON.parse(response.body);
-					if (bodyObj.objectId) {
-						let ossUrn = toBase64(bodyObj.objectId);
+    fs.readFile(filePath, function (err, filecontent) {
+      if (err) { errHandler(err, res); res.status(500).end('Error occurred ...'); return; }
+      request({
+        url: 'https://developer.api.autodesk.com/oss/v2/buckets/' + myBucketKey + '/objects/' + fileName,
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + tokenInternal.access_token,
+          'Content-Type': mineType
+        },
+        body: filecontent
+      }, function (error, response) {
+        if (error) { console.log(error); res.status(500).end('Error occurred ...'); return; }
+        // now translate to SVF (Forge Viewer format)
+        let bodyObj = JSON.parse(response.body);
+        if (bodyObj.objectId) {
+          let ossUrn = toBase64(bodyObj.objectId);
 
-						let derivative = new ForgeSDK.DerivativesApi();
-						derivative.translate(translateData(ossUrn), null, apiInstance, tokenInternal).then(data => {
-							if (callback) callback(); else res.status(200).end();
-						}, err => { errHandler(err, res); res.status(500).end('Error occurred ...'); });
-					} else res.status(500).end('Error occurred ...');
-				});
-			});
-		}, err => errHandler(err, res)
-    );
-	});
+          let derivative = new ForgeSDK.DerivativesApi();
+          derivative.translate(translateData(ossUrn), null, apiInstance, tokenInternal).then(data => {
+            if (callback) callback(); else res.status(200).end();
+          }, err => { errHandler(err, res); res.status(500).end('Error occurred ...'); });
+        } else res.status(500).end('Error occurred ...');
+      });
+    });
+  }, err => errHandler(err, res)
+  );
 }
 
 function getMineType (fileName) {
